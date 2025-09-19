@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -43,27 +44,51 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
     setIsLoading(true);
 
     try {
-      // Placeholder for Supabase auth integration
-      // const { data, error } = await supabase.auth[type === "signin" ? "signInWithPassword" : "signUp"]({
-      //   email,
-      //   password,
-      //   options: type === "signup" ? {
-      //     data: { full_name: name }
-      //   } : undefined
-      // });
-
-      // Simulate authentication for now
-      setTimeout(() => {
-        onAuthSuccess({ email });
+      const redirectUrl = `${window.location.origin}/`;
+      
+      if (type === "signin") {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (error) throw error;
+        
+        onAuthSuccess({ email: data.user?.email || email });
         onClose();
-        setIsLoading(false);
         
         toast({
-          title: "Welcome to gra-1 Utility!",
-          description: type === "signin" ? "Successfully signed in" : "Account created successfully"
+          title: "Welcome back!",
+          description: "Successfully signed in"
         });
-      }, 1500);
-    } catch (error) {
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: { full_name: name }
+          }
+        });
+        
+        if (error) throw error;
+        
+        if (data.user && !data.session) {
+          toast({
+            title: "Check your email",
+            description: "Please check your email for a confirmation link"
+          });
+        } else {
+          onAuthSuccess({ email: data.user?.email || email });
+          onClose();
+          toast({
+            title: "Welcome to gra-1 Utility!",
+            description: "Account created successfully"
+          });
+        }
+      }
+      setIsLoading(false);
+    } catch (error: any) {
       toast({
         title: "Authentication Failed",
         description: "Please check your credentials and try again",
@@ -77,22 +102,16 @@ const AuthModal = ({ isOpen, onClose, onAuthSuccess }: AuthModalProps) => {
     setIsLoading(true);
     
     try {
-      // Placeholder for OAuth integration
-      // const { error } = await supabase.auth.signInWithOAuth({
-      //   provider
-      // });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/`
+        }
+      });
 
-      setTimeout(() => {
-        onAuthSuccess({ email: `user@${provider}.com` });
-        onClose();
-        setIsLoading(false);
-        
-        toast({
-          title: "Welcome!",
-          description: `Successfully signed in with ${provider}`
-        });
-      }, 1500);
-    } catch (error) {
+      if (error) throw error;
+      setIsLoading(false);
+    } catch (error: any) {
       toast({
         title: "OAuth Failed",
         description: `Failed to sign in with ${provider}`,

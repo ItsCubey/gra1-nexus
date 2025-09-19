@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import ChatPanel from "@/components/ChatPanel";
@@ -9,8 +11,10 @@ import AuthModal from "@/components/AuthModal";
 
 const Index = () => {
   const [activePanel, setActivePanel] = useState("chat");
-  const [user, setUser] = useState<{ email: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Mock API usage data - would come from Supabase in real implementation
   const apiUsage = {
@@ -20,13 +24,32 @@ const Index = () => {
     dailyLimit: 50000
   };
 
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleAuthSuccess = (userData: { email: string }) => {
-    setUser(userData);
     setShowAuth(false);
   };
 
-  const handleSignOut = () => {
-    setUser(null);
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
   };
 
   const handleSignInClick = () => {
@@ -50,11 +73,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-dark-surface text-primary-foreground">
-      <Header 
-        user={user} 
-        onSignOut={handleSignOut}
-        onOpenSettings={() => setActivePanel("settings")}
-      />
+        <Header 
+          user={user ? { email: user.email || '' } : null} 
+          onSignOut={handleSignOut}
+          onOpenSettings={() => setActivePanel("settings")}
+        />
       
       <div className="flex h-[calc(100vh-4rem)]">
         <Sidebar 
@@ -64,7 +87,14 @@ const Index = () => {
         />
         
         <main className="flex-1 overflow-hidden">
-          {user ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="w-8 h-8 border-4 border-accent-warm border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Loading...</p>
+              </div>
+            </div>
+          ) : user ? (
             renderPanel()
           ) : (
             <div className="flex items-center justify-center h-full bg-background">
