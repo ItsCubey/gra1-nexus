@@ -8,35 +8,50 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* gra-1 Utility Color Palette */
+    --background: 210 15% 95%; /* #ECF3F4 */
+    --foreground: 233 15% 12%; /* #1E1E28 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 233 15% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 233 15% 12%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 233 15% 12%; /* #1E1E28 */
+    --primary-foreground: 210 15% 95%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 228 12% 17%; /* #2C2C3B */
+    --secondary-foreground: 210 15% 95%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 15% 88%;
+    --muted-foreground: 0 4% 40%; /* #6B5353 */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 0 4% 40%; /* #6B5353 */
+    --accent-foreground: 210 15% 95%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 51%;
+    --destructive-foreground: 210 15% 95%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 228 12% 17%;
+    --input: 228 12% 17%;
+    --ring: 0 4% 40%;
 
-    --radius: 0.5rem;
+    /* AI Assistant Specific Colors */
+    --dark-surface: 233 15% 12%; /* #1E1E28 */
+    --medium-surface: 228 12% 17%; /* #2C2C3B */
+    --accent-warm: 0 4% 40%; /* #6B5353 */
+    --light-surface: 210 15% 95%; /* #ECF3F4 */
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--dark-surface)), hsl(var(--medium-surface)));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent-warm)), hsl(var(--medium-surface)));
+
+    /* Shadows */
+    --shadow-ai: 0 10px 40px -15px hsl(var(--dark-surface) / 0.4);
+    --shadow-glow: 0 0 30px hsl(var(--accent-warm) / 0.3);
+
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
 
@@ -101,5 +116,67 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
+  /* AI Assistant Animations */
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--accent-warm) / 0.3); }
+    50% { box-shadow: 0 0 30px hsl(var(--accent-warm) / 0.6); }
+  }
+
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes fade-in-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  @keyframes typing-dots {
+    0%, 20% { content: ""; }
+    40% { content: "."; }
+    60% { content: ".."; }
+    80%, 100% { content: "..."; }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-slide-in-left {
+    animation: slide-in-left 0.6s ease-out;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out;
+  }
+
+  /* Typing indicator */
+  .typing-indicator::after {
+    content: "";
+    animation: typing-dots 1.5s infinite;
+  }
+
+  /* AI Chat Styles */
+  .message-bubble {
+    @apply rounded-xl px-4 py-3 max-w-[80%] shadow-lg;
+  }
+
+  .user-message {
+    @apply bg-accent-warm text-primary-foreground ml-auto;
+  }
+
+  .ai-message {
+    @apply bg-medium-surface text-primary-foreground;
+  }
+
+  /* Glassmorphism Effect */
+  .glass-panel {
+    background: linear-gradient(135deg, hsl(var(--medium-surface) / 0.8), hsl(var(--dark-surface) / 0.6));
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--accent-warm) / 0.2);
   }
 }

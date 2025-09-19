@@ -57,6 +57,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // AI Assistant Colors
+        "dark-surface": "hsl(var(--dark-surface))",
+        "medium-surface": "hsl(var(--medium-surface))",
+        "accent-warm": "hsl(var(--accent-warm))",
+        "light-surface": "hsl(var(--light-surface))",
       },
       borderRadius: {
         lg: "var(--radius)",
