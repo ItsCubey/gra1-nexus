@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Download, Image as ImageIcon, Sparkles, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GeneratedImage {
   id: string;
@@ -32,42 +33,40 @@ const ImagePanel = () => {
     setIsGenerating(true);
 
     try {
-      // Placeholder for Gemini API call via Supabase Edge Function
-      // const response = await fetch('/api/generate-image', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ 
-      //     prompt, 
-      //     model: selectedModel,
-      //     aspectRatio,
-      //     quality: quality[0]
-      //   })
-      // });
+      const { data, error } = await supabase.functions.invoke('generate-image', {
+        body: { 
+          prompt, 
+          model: selectedModel,
+          aspectRatio,
+          quality: quality[0]
+        }
+      });
 
-      // Simulate image generation for now
-      setTimeout(() => {
-        const newImage: GeneratedImage = {
-          id: Date.now().toString(),
-          prompt,
-          url: `https://images.unsplash.com/photo-1589197331516-2e28a7bd8450?w=512&h=512&fit=crop&crop=entropy&auto=format&fm=jpg&q=${quality[0]}`,
-          timestamp: new Date(),
-          model: selectedModel
-        };
-        
-        setImages(prev => [newImage, ...prev]);
-        setIsGenerating(false);
-        
-        toast({
-          title: "Image Generated!",
-          description: "Your AI-generated image is ready"
-        });
-      }, 3000);
+      if (error) throw error;
+
+      const newImage: GeneratedImage = {
+        id: Date.now().toString(),
+        prompt,
+        url: data.imageUrl,
+        timestamp: new Date(),
+        model: selectedModel
+      };
+      
+      setImages(prev => [newImage, ...prev]);
+      setPrompt("");
+      
+      toast({
+        title: "Image Generated!",
+        description: "Your AI-generated image is ready"
+      });
     } catch (error) {
+      console.error('Image generation error:', error);
       toast({
         title: "Generation Failed",
         description: "Failed to generate image. Please try again.",
         variant: "destructive"
       });
+    } finally {
       setIsGenerating(false);
     }
   };

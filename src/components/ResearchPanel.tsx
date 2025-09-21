@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Search, ExternalLink, Globe, Clock, RefreshCw, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SearchResult {
   id: string;
@@ -37,65 +38,35 @@ const ResearchPanel = () => {
     setIsSearching(true);
 
     try {
-      // Placeholder for web search API call via Supabase Edge Function
-      // const response = await fetch('/api/web-search', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ query })
-      // });
+      const { data, error } = await supabase.functions.invoke('web-research', {
+        body: { query }
+      });
 
-      // Simulate web search results for now
-      setTimeout(() => {
-        const mockResults: SearchResult[] = [
-          {
-            id: "1",
-            title: "Understanding AI and Machine Learning",
-            snippet: "Comprehensive guide to artificial intelligence concepts, machine learning algorithms, and their real-world applications...",
-            url: "https://example.com/ai-guide",
-            domain: "example.com",
-            timestamp: "2 hours ago"
-          },
-          {
-            id: "2",
-            title: "Latest AI Research Breakthroughs",
-            snippet: "Recent developments in AI research including transformer models, computer vision, and natural language processing...",
-            url: "https://research.example.com/ai-breakthroughs",
-            domain: "research.example.com",
-            timestamp: "5 hours ago"
-          },
-          {
-            id: "3",
-            title: "AI Ethics and Future Implications",
-            snippet: "Discussion on responsible AI development, ethical considerations, and the future impact of artificial intelligence...",
-            url: "https://ethics.ai.com/future-implications",
-            domain: "ethics.ai.com",
-            timestamp: "1 day ago"
-          }
-        ];
+      if (error) throw error;
 
-        const newResearch: ResearchQuery = {
-          id: Date.now().toString(),
-          query,
-          summary: `Based on the search results for "${query}", here's what I found: The topic encompasses various aspects including technical foundations, recent research developments, and ethical considerations. The sources provide comprehensive coverage from basic concepts to advanced applications. This research suggests a growing field with significant implications for various industries and society as a whole.`,
-          results: mockResults,
-          timestamp: new Date()
-        };
+      const newResearch: ResearchQuery = {
+        id: Date.now().toString(),
+        query,
+        summary: data.summary,
+        results: data.results,
+        timestamp: new Date()
+      };
 
-        setResearch(prev => [newResearch, ...prev]);
-        setQuery("");
-        setIsSearching(false);
-        
-        toast({
-          title: "Research Complete!",
-          description: `Found ${mockResults.length} relevant sources`
-        });
-      }, 2500);
+      setResearch(prev => [newResearch, ...prev]);
+      setQuery("");
+      
+      toast({
+        title: "Research Complete!",
+        description: `Found ${data.results.length} relevant sources`
+      });
     } catch (error) {
+      console.error('Research error:', error);
       toast({
         title: "Search Failed",
         description: "Failed to perform web search. Please try again.",
         variant: "destructive"
       });
+    } finally {
       setIsSearching(false);
     }
   };
